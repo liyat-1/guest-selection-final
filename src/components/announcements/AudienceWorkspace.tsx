@@ -249,15 +249,20 @@ export function AudienceWorkspace({
           onUseIn={(cat) => onUseIn(selected, cat)}
         />
       ) : (
-        <section className="grid place-items-center gap-2 rounded-xl border border-dashed border-border bg-background px-6 py-20 text-center">
-          <span className="grid size-11 place-items-center rounded-full bg-primary/10 text-primary">
-            <Users size={18} />
-          </span>
-          <p className="mt-1 text-[13.5px] font-semibold text-foreground">No audience selected</p>
-          <p className="max-w-sm text-[12.5px] text-muted-foreground">
-            Create an audience to target guests by room numbers, room types or rate codes.
-          </p>
+        <section className="rounded-xl border border-dashed border-border bg-background py-14">
+          <EmptyState
+            icon={<Users size={18} />}
+            title="No audience selected"
+            description="Create an audience to target guests by room numbers, room types or rate codes."
+            action={
+              <button type="button" className={btnPrimary} onClick={onCreate}>
+                <Plus size={14} />
+                Create audience
+              </button>
+            }
+          />
         </section>
+
       )}
     </div>
   );
