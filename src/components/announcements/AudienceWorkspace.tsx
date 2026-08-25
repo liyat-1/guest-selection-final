@@ -27,7 +27,20 @@ import {
   resolveAudience,
   rulesSentence,
 } from "@/lib/announcements";
-import { btnGhost, btnPrimary } from "./ui";
+import {
+  EmptyState,
+  Initials,
+  btnGhost,
+  btnPrimary,
+  field,
+  fieldSelect,
+  tableEl,
+  tableHead,
+  tableWrap,
+  td,
+  th,
+  tr,
+} from "./ui";
 
 const PAGE_SIZES = [5, 10, 25];
 
@@ -76,25 +89,27 @@ export function AudienceWorkspace({
     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
       {/* ------------------------- left: audience list ------------------------- */}
       <section className="overflow-hidden rounded-xl border border-border bg-background shadow-xs">
-        <header className="space-y-3 border-b border-border bg-muted/30 px-4 py-3.5">
+        <header className="space-y-2.5 border-b border-border bg-gradient-to-b from-muted/45 to-muted/15 px-4 py-3.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-[15px] font-semibold tracking-tight text-foreground">Audiences</h2>
-            <span className="text-[12px] text-muted-foreground">
-              {audiences.length} audience{audiences.length === 1 ? "" : "s"}
+            <h2 className="text-[14px] font-semibold tracking-[-0.01em] text-foreground">
+              Audiences
+            </h2>
+            <span className="rounded-full border border-border bg-background px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground">
+              {audiences.length}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative min-w-[11rem] flex-1">
               <Search
                 size={14}
-                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
               />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search audiences..."
+                placeholder="Search audiences…"
                 aria-label="Search audiences"
-                className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-2 text-[13px] outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                className={`${field} w-full pl-9`}
               />
             </div>
             <button type="button" className={btnPrimary} onClick={onCreate}>
@@ -104,7 +119,7 @@ export function AudienceWorkspace({
           </div>
         </header>
 
-        <ul className="max-h-[38rem] space-y-2 overflow-y-auto p-3">
+        <ul className="max-h-[38rem] space-y-1.5 overflow-y-auto p-2.5">
           {rows.map((a) => {
             const used = usageById.get(a.id) ?? 0;
             const on = a.id === selectedId;
@@ -114,34 +129,49 @@ export function AudienceWorkspace({
                   type="button"
                   onClick={() => setSelectedId(a.id)}
                   aria-current={on}
-                  className={`w-full rounded-lg border px-3.5 py-3 text-left transition-colors ${
+                  className={`relative w-full overflow-hidden rounded-lg border py-2.5 pl-3.5 pr-10 text-left transition-all duration-150 ${
                     on
-                      ? "border-primary bg-primary/[0.06] shadow-xs"
-                      : "border-border bg-background hover:border-primary/30 hover:bg-muted/40"
+                      ? "border-primary/45 bg-primary/[0.055] shadow-xs ring-1 ring-inset ring-primary/10"
+                      : "border-transparent bg-background hover:border-border hover:bg-muted/50"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                  <span
+                    aria-hidden
+                    className={`absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-primary transition-opacity ${
+                      on ? "opacity-100" : "opacity-0"
+                    }`}
+                  />
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`grid size-8 shrink-0 place-items-center rounded-lg transition-colors ${
+                        on
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-primary/10 text-primary ring-1 ring-inset ring-primary/12"
+                      }`}
+                    >
                       <Users size={15} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="truncate text-[13.5px] font-semibold text-foreground">
+                        <p className="truncate text-[13px] font-semibold text-foreground">
                           {a.name}
                         </p>
-                        <span className="ml-auto shrink-0 rounded border border-border bg-muted px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-foreground">
-                          {audienceCount(a)} guests
+                        <span className="ml-auto shrink-0 rounded-full border border-border bg-muted px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-muted-foreground">
+                          {audienceCount(a)}
                         </span>
                       </div>
-                      <p className="mt-0.5 inline-flex items-center gap-1.5 text-[11.5px] font-medium text-chart-2">
-                        <span className="size-1.5 rounded-full bg-chart-2" />
-                        Active
-                      </p>
-                      <p className="mt-1 truncate text-[12.5px] text-muted-foreground">
+                      <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
                         {audienceSummary(a)}
                       </p>
-                      <p className="mt-0.5 text-[11.5px] text-muted-foreground">
-                        Used in {used} announcement{used === 1 ? "" : "s"}
+                      <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1 font-medium text-chart-emerald">
+                          <span className="size-1.5 rounded-full bg-chart-emerald" />
+                          Active
+                        </span>
+                        <span className="text-border">·</span>
+                        <span className="truncate">
+                          {used} announcement{used === 1 ? "" : "s"}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -150,47 +180,62 @@ export function AudienceWorkspace({
                   type="button"
                   aria-label={`More actions for ${a.name}`}
                   onClick={() => setMenu((m) => (m === a.id ? null : a.id))}
-                  className="absolute bottom-2.5 right-2 grid size-7 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="absolute right-2 top-2.5 grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 >
                   <MoreHorizontal size={15} />
                 </button>
                 {menu === a.id && (
-                  <div className="absolute bottom-10 right-2 z-30 w-44 rounded-md border border-border bg-popover p-1 shadow-lg">
-                    {(
-                      [
-                        ["Edit audience", Pencil, () => onEdit(a)],
-                        ["Duplicate", Copy, () => onDuplicate(a)],
-                        ["View usage", BarChart3, () => onUsage(a)],
-                        ["Delete audience", Trash2, () => onDelete(a)],
-                      ] as const
-                    ).map(([label, Icon, act]) => (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => {
-                          setMenu(null);
-                          act();
-                        }}
-                        className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12.5px] hover:bg-accent ${
-                          label === "Delete audience" ? "text-destructive" : "text-foreground"
-                        }`}
-                      >
-                        <Icon size={13} />
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setMenu(null)} />
+                    <div className="absolute right-2 top-10 z-30 w-44 rounded-xl border border-border bg-popover p-1 shadow-menu duration-150 animate-in fade-in zoom-in-95">
+                      {(
+                        [
+                          ["Edit audience", Pencil, () => onEdit(a)],
+                          ["Duplicate", Copy, () => onDuplicate(a)],
+                          ["View usage", BarChart3, () => onUsage(a)],
+                          ["Delete audience", Trash2, () => onDelete(a)],
+                        ] as const
+                      ).map(([label, Icon, act], i) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => {
+                            setMenu(null);
+                            act();
+                          }}
+                          className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-[12.5px] transition-colors ${
+                            i === 3
+                              ? "mt-1 border-t border-border pt-2 text-destructive hover:bg-destructive/10"
+                              : "text-foreground hover:bg-accent"
+                          }`}
+                        >
+                          <Icon size={13} />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
                 )}
               </li>
             );
           })}
           {rows.length === 0 && (
-            <li className="px-3 py-10 text-center text-[12.5px] text-muted-foreground">
-              No audiences match “{q}”.
+            <li>
+              <EmptyState
+                icon={<Search size={17} />}
+                title="No audiences found"
+                description={`Nothing matches “${q}”. Try a different name, room type or rate code.`}
+                action={
+                  <button type="button" className={btnGhost} onClick={() => setQ("")}>
+                    Clear search
+                  </button>
+                }
+              />
             </li>
           )}
         </ul>
       </section>
+
 
       {/* ------------------------- right: details ------------------------- */}
       {selected ? (
@@ -204,15 +249,20 @@ export function AudienceWorkspace({
           onUseIn={(cat) => onUseIn(selected, cat)}
         />
       ) : (
-        <section className="grid place-items-center gap-2 rounded-xl border border-dashed border-border bg-background px-6 py-20 text-center">
-          <span className="grid size-11 place-items-center rounded-full bg-primary/10 text-primary">
-            <Users size={18} />
-          </span>
-          <p className="mt-1 text-[13.5px] font-semibold text-foreground">No audience selected</p>
-          <p className="max-w-sm text-[12.5px] text-muted-foreground">
-            Create an audience to target guests by room numbers, room types or rate codes.
-          </p>
+        <section className="rounded-xl border border-dashed border-border bg-background py-14">
+          <EmptyState
+            icon={<Users size={18} />}
+            title="No audience selected"
+            description="Create an audience to target guests by room numbers, room types or rate codes."
+            action={
+              <button type="button" className={btnPrimary} onClick={onCreate}>
+                <Plus size={14} />
+                Create audience
+              </button>
+            }
+          />
         </section>
+
       )}
     </div>
   );
@@ -271,24 +321,30 @@ function AudienceDetail({
     [resolved.recipients],
   );
 
-  const selectCls =
-    "h-8 rounded-md border border-input bg-background px-2 text-[12.5px] text-foreground outline-none focus:border-ring";
+  const selectCls = fieldSelect;
 
   return (
     <section className="overflow-hidden rounded-xl border border-border bg-background shadow-xs">
-      <header className="border-b border-border bg-muted/30 px-5 py-4">
+      <header className="border-b border-border bg-gradient-to-b from-muted/45 to-muted/15 px-5 py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="truncate text-[16px] font-semibold tracking-tight text-foreground">
-                {audience.name}
-              </h2>
-              <span className="inline-flex items-center gap-1.5 rounded border border-chart-2/40 bg-chart-2/10 px-1.5 py-0.5 text-[11px] font-medium text-chart-2">
-                <span className="size-1.5 rounded-full bg-chart-2" />
-                Active
-              </span>
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/12">
+              <Users size={18} />
+            </span>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="truncate text-[16px] font-semibold tracking-[-0.015em] text-foreground">
+                  {audience.name}
+                </h2>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-chart-emerald/25 bg-chart-emerald/10 px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.05em] text-chart-emerald">
+                  <span className="size-1.5 rounded-full bg-chart-emerald" />
+                  Active
+                </span>
+              </div>
+              <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
+                {audienceSummary(audience)}
+              </p>
             </div>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">{audienceSummary(audience)}</p>
           </div>
           <div className="relative flex items-center gap-1.5">
             <button
@@ -299,7 +355,10 @@ function AudienceDetail({
             >
               <CalendarPlus size={14} />
               Use in
-              <ChevronDown size={13} />
+              <ChevronDown
+                size={13}
+                className={`transition-transform ${useMenu ? "rotate-180" : ""}`}
+              />
             </button>
             <button type="button" className={btnGhost} onClick={onEdit}>
               <Pencil size={13} />
@@ -308,38 +367,42 @@ function AudienceDetail({
             <button
               type="button"
               onClick={onDelete}
-              className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-[13px] font-medium text-destructive transition-colors hover:bg-destructive/10"
+              aria-label={`Delete ${audience.name}`}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-input bg-background px-3 py-2 text-[13px] font-medium text-destructive shadow-xs transition-colors hover:border-destructive/40 hover:bg-destructive/10"
             >
               <Trash2 size={13} />
               Delete
             </button>
             {useMenu && (
-              <div className="absolute right-0 top-11 z-30 w-56 rounded-md border border-border bg-popover p-1 shadow-lg">
-                <p className="px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Guest category
-                </p>
-                {PRESETS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      setUseMenu(false);
-                      onUseIn(p.id);
-                    }}
-                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12.5px] text-foreground hover:bg-accent"
-                  >
-                    <span className="flex-1 truncate">{p.name}</span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {guestsForPreset(p.id).length}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="fixed inset-0 z-20" onClick={() => setUseMenu(false)} />
+                <div className="absolute right-0 top-11 z-30 w-60 rounded-xl border border-border bg-popover p-1 shadow-menu duration-150 animate-in fade-in zoom-in-95">
+                  <p className="px-2 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Guest category
+                  </p>
+                  {PRESETS.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setUseMenu(false);
+                        onUseIn(p.id);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors hover:bg-accent"
+                    >
+                      <span className="flex-1 truncate">{p.name}</span>
+                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums text-muted-foreground">
+                        {guestsForPreset(p.id).length}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>
 
-        <nav className="-mb-4 mt-3 flex gap-5" aria-label="Audience detail sections">
+        <nav className="-mb-4 mt-3.5 flex gap-5" aria-label="Audience detail sections">
           {(
             [
               ["recipients", "Recipients"],
@@ -354,7 +417,7 @@ function AudienceDetail({
               className={`border-b-2 px-0.5 pb-2.5 text-[13px] font-medium transition-colors ${
                 tab === id
                   ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
+                  : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
               }`}
             >
               {label}
@@ -362,6 +425,7 @@ function AudienceDetail({
           ))}
         </nav>
       </header>
+
 
       <div className="space-y-4 p-5">
         {tab === "recipients" ? (
