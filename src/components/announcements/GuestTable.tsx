@@ -1,7 +1,20 @@
 import { useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, UserX, X } from "lucide-react";
 import type { Guest } from "@/lib/announcements";
 import { ROOM_TYPES, RATE_CODES } from "@/lib/announcements";
+import {
+  EmptyState,
+  Initials,
+  btnGhost,
+  field,
+  fieldSelect,
+  tableEl,
+  tableHead,
+  tableWrap,
+  td,
+  th,
+  tr,
+} from "./ui";
 
 function Cb({ checked, onChange }: { checked: boolean; onChange: () => void }) {
   return (
@@ -54,8 +67,12 @@ export function GuestTable({
   );
 
   const allOn = rows.length > 0 && rows.every((g) => selected.has(g.id));
-  const selectCls =
-    "h-8 rounded-md border border-input bg-background px-2 text-[12.5px] text-foreground outline-none focus:border-ring";
+  const clearAllFilters = () => {
+    setQ("");
+    setRoom("");
+    setRoomType("");
+    setRateCode("");
+  };
 
   return (
     <div className="space-y-3">
@@ -63,25 +80,25 @@ export function GuestTable({
         <div className="relative min-w-48 flex-1">
           <Search
             size={14}
-            className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search guests by name or room..."
-            className="h-8 w-full rounded-md border border-input bg-background pl-8 pr-2 text-[12.5px] outline-none focus:border-ring"
+            placeholder="Search guests by name or room…"
+            className={`${field} w-full pl-9`}
           />
         </div>
         <input
           value={room}
           onChange={(e) => setRoom(e.target.value.replace(/\D/g, ""))}
-          placeholder="Room number"
-          className={`${selectCls} w-28`}
+          placeholder="Room no."
+          className={`${field} w-28`}
         />
         <select
           value={roomType}
           onChange={(e) => setRoomType(e.target.value)}
-          className={selectCls}
+          className={fieldSelect}
           aria-label="Room type filter"
         >
           <option value="">Room type</option>
@@ -92,7 +109,7 @@ export function GuestTable({
         <select
           value={rateCode}
           onChange={(e) => setRateCode(e.target.value)}
-          className={selectCls}
+          className={fieldSelect}
           aria-label="Rate code filter"
         >
           <option value="">Rate code</option>
@@ -102,97 +119,97 @@ export function GuestTable({
         </select>
       </div>
 
-      <div className="flex items-center gap-3 text-[12px] text-muted-foreground">
-        <button
-          type="button"
-          onClick={onSelectAll}
-          className="font-medium text-foreground hover:underline"
-        >
-          Select all
-        </button>
-        <span className="text-border">|</span>
-        <button
-          type="button"
-          onClick={onClearAll}
-          className="font-medium text-foreground hover:underline"
-        >
-          Deselect all
-        </button>
-        <span className="ml-auto tabular-nums">
-          {guests.length} matched · {selected.size} selected
-        </span>
-      </div>
+      <div className={tableWrap}>
+        <div className="flex flex-wrap items-center gap-3 border-b border-border bg-muted/25 px-3.5 py-2 text-[12px] text-muted-foreground">
+          <button
+            type="button"
+            onClick={onSelectAll}
+            className="font-medium text-foreground transition-colors hover:text-primary"
+          >
+            Select all
+          </button>
+          <span className="h-3 w-px bg-border" />
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="font-medium text-foreground transition-colors hover:text-primary"
+          >
+            Deselect all
+          </button>
+          <span className="ml-auto tabular-nums">
+            <span className="font-semibold text-foreground">{rows.length}</span> matched ·{" "}
+            <span className="font-semibold text-foreground">{selected.size}</span> selected
+          </span>
+        </div>
 
-      <div className="overflow-hidden rounded-md border border-border">
-        <table className="w-full border-collapse text-left text-[12.5px]">
-          <thead className="bg-muted/60 text-[11px] uppercase tracking-wide text-muted-foreground">
+        <table className={tableEl}>
+          <thead className={tableHead}>
             <tr>
-              <th className="w-9 px-3 py-2">
+              <th className="w-10 px-3.5 py-2.5">
                 <Cb checked={allOn} onChange={() => (allOn ? onClearAll() : onSelectAll())} />
               </th>
-              <th className="px-3 py-2 font-medium">Guest</th>
-              <th className="px-3 py-2 font-medium">Room</th>
-              <th className="px-3 py-2 font-medium">Room type</th>
-              <th className="px-3 py-2 font-medium">Rate code</th>
-              <th className="px-3 py-2 font-medium">Stay</th>
-              {showStatus && <th className="px-3 py-2 font-medium">Status</th>}
-              <th className="w-9 px-3 py-2" />
+              <th className={th}>Guest</th>
+              <th className={th}>Room</th>
+              <th className={th}>Room type</th>
+              <th className={th}>Rate code</th>
+              <th className={th}>Stay</th>
+              {showStatus && <th className={th}>Status</th>}
+              <th className="w-10 px-3.5 py-2.5" />
             </tr>
           </thead>
           <tbody>
-            {rows.map((g) => (
-              <tr key={g.id} className="border-t border-border hover:bg-muted/40">
-                <td className="px-3 py-2">
-                  <Cb checked={selected.has(g.id)} onChange={() => onToggle(g.id)} />
-                </td>
-                <td className="px-3 py-2 font-medium text-foreground">{g.name}</td>
-                <td className="px-3 py-2 tabular-nums text-foreground">{g.room}</td>
-                <td className="px-3 py-2 text-muted-foreground">{g.roomType}</td>
-                <td className="px-3 py-2 font-mono text-[11.5px] text-muted-foreground">
-                  {g.rateCode}
-                </td>
-                <td className="px-3 py-2 text-muted-foreground">{g.stay}</td>
-                {showStatus && <td className="px-3 py-2 text-muted-foreground">{g.status}</td>}
-                <td className="px-3 py-2">
-                  {selected.has(g.id) && (
-                    <button
-                      type="button"
-                      aria-label={`Remove ${g.name}`}
-                      onClick={() => onToggle(g.id)}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <X size={13} />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {rows.map((g) => {
+              const on = selected.has(g.id);
+              return (
+                <tr key={g.id} className={`${tr} ${on ? "bg-primary/[0.045]" : ""}`}>
+                  <td className={td}>
+                    <Cb checked={on} onChange={() => onToggle(g.id)} />
+                  </td>
+                  <td className={td}>
+                    <span className="flex items-center gap-2">
+                      <Initials name={g.name} />
+                      <span className="font-medium text-foreground">{g.name}</span>
+                    </span>
+                  </td>
+                  <td className={`${td} tabular-nums text-foreground`}>{g.room}</td>
+                  <td className={`${td} text-muted-foreground`}>{g.roomType}</td>
+                  <td className={`${td} font-mono text-[11.5px] text-muted-foreground`}>
+                    {g.rateCode}
+                  </td>
+                  <td className={`${td} text-muted-foreground`}>{g.stay}</td>
+                  {showStatus && <td className={`${td} text-muted-foreground`}>{g.status}</td>}
+                  <td className={td}>
+                    {on && (
+                      <button
+                        type="button"
+                        aria-label={`Remove ${g.name}`}
+                        onClick={() => onToggle(g.id)}
+                        className="grid size-6 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
+
         {rows.length === 0 && (
-          <div className="px-4 py-10 text-center">
-            <p className="text-[13px] font-medium text-foreground">
-              No guests match these conditions
-            </p>
-            <p className="mt-1 text-[12.5px] text-muted-foreground">
-              Try adjusting the room number, room type, or rate code filters.
-            </p>
-            <div className="mt-3 flex justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setQ("");
-                  setRoom("");
-                  setRoomType("");
-                  setRateCode("");
-                }}
-                className="rounded-md border border-input px-3 py-1.5 text-[12.5px] font-medium text-foreground hover:bg-accent"
-              >
-                Clear filters
-              </button>
-              {emptyAction}
-            </div>
-          </div>
+          <EmptyState
+            icon={<UserX size={18} />}
+            title="No guests match these conditions"
+            description="Try adjusting the room number, room type, or rate code filters."
+            action={
+              <>
+                <button type="button" onClick={clearAllFilters} className={btnGhost}>
+                  Clear filters
+                </button>
+                {emptyAction}
+              </>
+            }
+          />
         )}
       </div>
     </div>
