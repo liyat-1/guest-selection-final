@@ -147,7 +147,7 @@ const LINE_FACTOR: Record<string, number> = { Email: 1, Phone: 0.72, Address: 0.
 /** Trims the data copy to chip length so all three columns line up. */
 const shortNote = (note?: string) =>
   (note ?? "")
-    .replace(" of bookings analyzed", "% pt".startsWith("x") ? "" : " of bookings")
+    .replace(" of bookings analyzed", " of bookings")
     .replace(" pts of usable info", " pts more usable");
 
 const toNumber = (v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0;
