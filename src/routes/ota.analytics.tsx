@@ -274,7 +274,7 @@ function QualityCard({
                     )}
                   </span>
 
-                  <ul className="mt-auto space-y-2 border-t border-slate-200/80 pt-3.5 [margin-top:1.25rem]">
+                  <ul className="mt-auto space-y-2 border-t border-slate-200/80 pt-3.5">
                     {(c.breakdown ?? []).map((b) => {
                       const Icon = BREAKDOWN_ICON[b.label as keyof typeof BREAKDOWN_ICON];
                       const line = Math.round(value * (LINE_FACTOR[b.label] ?? 1) * 10) / 10;
