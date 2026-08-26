@@ -261,18 +261,21 @@ function QualityCard({
                     />
                   </span>
 
-                  <span className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="mt-3 flex h-6 items-center">
                     <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${tone.chip}`}
+                      className={`inline-flex max-w-full items-center truncate rounded-full px-2 py-0.5 text-[10.5px] font-semibold whitespace-nowrap ${tone.chip}`}
                     >
                       {c.note}
                     </span>
+                  </span>
+                  <span className="mt-2 flex h-5 items-center">
                     {showDelta ? (
                       <Delta value={value} />
                     ) : (
                       <span className="text-[10.5px] text-slate-400">No comparison</span>
                     )}
                   </span>
+
 
                   <ul className="mt-auto space-y-2 border-t border-slate-200/80 pt-3.5">
                     {(c.breakdown ?? []).map((b) => {
