@@ -104,22 +104,38 @@ function SectionHead({
   );
 }
 
-/** Column palette for the Valid → Improved → Final story. */
-const QUALITY_TONE: Record<string, { text: string; chip: string; icon: string }> = {
+/**
+ * Column palette for the Valid → Improved → Final story.
+ *
+ * Hues follow the Okabe–Ito colour-blind–safe set (bluish green, orange,
+ * reddish purple) so the three steps stay separable for deuteranopia and
+ * protanopia. Colour never carries meaning alone: every step also has its own
+ * label, bar length and position in the sequence.
+ */
+const QUALITY_TONE: Record<
+  string,
+  { text: string; chip: string; icon: string; bar: string; rail: string }
+> = {
   valid: {
     text: "text-chart-teal",
     chip: "bg-kpi-teal text-kpi-ink",
     icon: "text-chart-teal",
+    bar: "bg-chart-teal",
+    rail: "bg-chart-teal",
   },
   improved: {
     text: "text-chart-amber",
     chip: "bg-kpi-amber text-kpi-ink",
     icon: "text-chart-amber",
+    bar: "bg-chart-amber",
+    rail: "bg-chart-amber",
   },
   final: {
     text: "text-chart-violet",
     chip: "bg-kpi-violet text-kpi-ink",
     icon: "text-chart-violet",
+    bar: "bg-chart-violet",
+    rail: "bg-chart-violet",
   },
 };
 
@@ -128,13 +144,39 @@ const BREAKDOWN_ICON = { Email: Mail, Phone: Phone, Address: Home } as const;
 /** Per-line momentum, derived from the card delta so it moves with the comparison. */
 const LINE_FACTOR: Record<string, number> = { Email: 1, Phone: 0.72, Address: 0.48 };
 
+/** Trims the data copy to chip length so all three columns line up. */
+const shortNote = (note?: string) =>
+  (note ?? "")
+    .replace(" of bookings analyzed", " of bookings")
+    .replace(" pts of usable info", " pts more usable");
+
+const toNumber = (v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0;
+
+/**
+ * Direction is shown with an arrow glyph as well as colour, so the read-out
+ * survives red/green colour blindness and greyscale printing.
+ */
+function LineDelta({ value }: { value: number }) {
+  const up = value >= 0;
+  return (
+    <span
+      className={`inline-flex items-baseline gap-0.5 text-[10.5px] font-semibold tabular-nums ${
+        up ? "text-chart-teal" : "text-rose-700"
+      }`}
+    >
+      <span aria-hidden>{up ? "▲" : "▼"}</span>
+      {Math.abs(value).toFixed(1)}%
+    </span>
+  );
+}
+
 /**
  * Information quality, told in ONE card.
  *
  * Valid → Improved → Final read left to right as a single transformation: a
- * headline figure, its completeness chip, and the Email / Phone / Address
- * detail behind it — each line carrying its own momentum against the active
- * comparison window.
+ * headline figure, a proportional bar that makes the magnitude readable at a
+ * glance, its completeness chip, and the Email / Phone / Address detail behind
+ * it — each line carrying its own momentum against the active comparison.
  */
 function QualityCard({
   cards,
@@ -157,11 +199,12 @@ function QualityCard({
   const completeness = cards.find((c) => c.key === "completeness");
   const showDelta = comparison !== "none";
   const caption = comparisonCaption(comparison, custom).toLowerCase();
+  const peak = Math.max(1, ...steps.map((c) => toNumber(c.value)));
 
   return (
-    <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(470px,1fr)_minmax(0,1fr)]">
-      <div className="ota-glass min-w-0 overflow-hidden rounded-2xl border">
-        <header className="flex items-start justify-between gap-4 border-b border-ota-border px-5 py-4">
+    <section className="grid min-w-0 items-stretch gap-4 xl:grid-cols-[minmax(470px,1fr)_minmax(0,1fr)]">
+      <div className="ota-glass flex min-w-0 flex-col overflow-hidden rounded-2xl border">
+        <header className="flex items-start justify-between gap-4 border-b border-ota-border px-6 py-4">
           <div className="min-w-0">
             <h2 className="font-display text-[15px] font-semibold text-slate-900">
               Information quality
@@ -170,8 +213,15 @@ function QualityCard({
               How guest information progresses from received to usable
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {completeness ? <Ring value={completeness.ring ?? 0} size={44} /> : null}
+          <div className="flex shrink-0 items-center gap-3">
+            {completeness ? (
+              <span className="flex items-center gap-2 rounded-full border border-ota-border bg-slate-50 py-1 pl-1 pr-3">
+                <Ring value={completeness.ring ?? 0} size={38} />
+                <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-slate-500">
+                  Complete
+                </span>
+              </span>
+            ) : null}
             <InfoTip title="Information quality">
               Final guest information combines valid details with information successfully improved
               through cleanup.
@@ -179,66 +229,76 @@ function QualityCard({
           </div>
         </header>
 
-        <div className="grid grid-cols-1 divide-y divide-slate-200 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:divide-y-0">
+        <div className="grid flex-1 grid-cols-1 items-stretch divide-y divide-slate-200 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:divide-y-0 sm:divide-x sm:divide-slate-200">
           {steps.map((c, i) => {
             const tone = QUALITY_TONE[c.step!];
             const on = selected === c.chart;
             const value = delta(c.delta);
+            const share = Math.round((toNumber(c.value) / peak) * 100);
             return (
               <div key={c.key} className="contents">
                 <button
                   type="button"
                   onClick={() => onSelect(c.chart ?? "quality")}
                   aria-pressed={on}
-                  className={`min-w-0 px-4 py-4 text-left transition-colors ${
+                  className={`flex min-w-0 flex-col px-5 py-5 text-left transition-colors ${
                     on ? "bg-slate-50" : "hover:bg-slate-50/70"
                   }`}
                 >
-                  <p className={`text-[12.5px] font-semibold ${tone.text}`}>
-                    {c.label.replace(" guest info", "")}
-                  </p>
-                  <p className="mt-2 text-[26px] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
-                    {c.value}
-                  </p>
-                  <span
-                    className={`mt-2.5 inline-flex items-center rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${tone.chip}`}
-                  >
-                    {c.note}
+                  <span className="flex items-center gap-2">
+                    <span aria-hidden className={`h-3.5 w-1 rounded-full ${tone.rail}`} />
+                    <span className={`text-[12.5px] font-semibold ${tone.text}`}>
+                      {c.label.replace(" guest info", "")}
+                    </span>
                   </span>
-                  {showDelta ? (
-                    <span className="mt-2.5 block">
-                      <Delta value={value} />
-                    </span>
-                  ) : (
-                    <span className="mt-2.5 block text-[10.5px] text-slate-400">
-                      No comparison
-                    </span>
-                  )}
 
-                  <ul className="mt-3.5 space-y-2 border-t border-slate-200/80 pt-3">
+                  <span className="mt-3 block text-[28px] font-semibold leading-none tabular-nums tracking-tight text-slate-900">
+                    {c.value}
+                  </span>
+
+                  {/* Proportional bar: magnitude readable without reading digits. */}
+                  <span
+                    aria-hidden
+                    className="mt-3 block h-1.5 w-full overflow-hidden rounded-full bg-slate-200/80"
+                  >
+                    <span
+                      className={`block h-full rounded-full ${tone.bar}`}
+                      style={{ width: `${Math.max(6, share)}%` }}
+                    />
+                  </span>
+
+                  <span className="mt-3 flex h-6 items-center">
+                    <span
+                      className={`inline-block max-w-full overflow-hidden rounded-full px-2 py-1 text-[10.5px] font-semibold text-ellipsis whitespace-nowrap ${tone.chip}`}
+                    >
+                      {shortNote(c.note)}
+                    </span>
+                  </span>
+
+                  <span className="mt-2 flex h-5 items-center">
+                    {showDelta ? (
+                      <Delta value={value} />
+                    ) : (
+                      <span className="text-[10.5px] text-slate-400">No comparison</span>
+                    )}
+                  </span>
+
+
+                  <ul className="mt-auto space-y-2 border-t border-slate-200/80 pt-3.5">
                     {(c.breakdown ?? []).map((b) => {
                       const Icon = BREAKDOWN_ICON[b.label as keyof typeof BREAKDOWN_ICON];
                       const line = Math.round(value * (LINE_FACTOR[b.label] ?? 1) * 10) / 10;
                       return (
                         <li key={b.label} className="flex items-baseline justify-between gap-2">
                           <span className="flex min-w-0 items-center gap-1.5 text-[11.5px] text-slate-500">
-                            {Icon ? <Icon size={11} className={`shrink-0 ${tone.icon}`} /> : null}
+                            {Icon ? <Icon size={12} className={`shrink-0 ${tone.icon}`} /> : null}
                             <span className="truncate">{b.label}</span>
                           </span>
                           <span className="flex shrink-0 items-baseline gap-1.5">
                             <span className="text-[12.5px] font-semibold tabular-nums text-slate-900">
                               {b.value}
                             </span>
-                            {showDelta ? (
-                              <span
-                                className={`text-[10.5px] font-semibold tabular-nums ${
-                                  line >= 0 ? "text-emerald-600" : "text-rose-600"
-                                }`}
-                              >
-                                {line >= 0 ? "+" : "−"}
-                                {Math.abs(line).toFixed(1)}%
-                              </span>
-                            ) : null}
+                            {showDelta ? <LineDelta value={line} /> : null}
                           </span>
                         </li>
                       );
@@ -248,7 +308,7 @@ function QualityCard({
                 {i < steps.length - 1 ? (
                   <span
                     aria-hidden
-                    className="hidden items-center justify-center px-1 text-slate-300 sm:flex"
+                    className="hidden items-center justify-center px-2 text-slate-300 sm:flex"
                   >
                     <ArrowRight size={16} />
                   </span>
@@ -258,7 +318,7 @@ function QualityCard({
           })}
         </div>
 
-        <p className="border-t border-slate-200 bg-slate-50/70 px-5 py-2.5 text-[10.5px] text-slate-500">
+        <p className="border-t border-slate-200 bg-slate-50/70 px-6 py-3 text-[11px] leading-relaxed text-slate-500">
           Final = Valid information + Successfully improved information
           {completeness ? ` · ${completeness.value} profile completeness` : ""}
           {showDelta ? ` · momentum vs. ${caption}` : ""}
@@ -280,6 +340,7 @@ function QualityCard({
     </section>
   );
 }
+
 
 function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
   return (
