@@ -263,11 +263,12 @@ function QualityCard({
 
                   <span className="mt-3 flex h-6 items-center">
                     <span
-                      className={`inline-flex max-w-full items-center truncate rounded-full px-2 py-0.5 text-[10.5px] font-semibold whitespace-nowrap ${tone.chip}`}
+                      className={`inline-block max-w-full overflow-hidden rounded-full px-2 py-1 text-[10.5px] font-semibold text-ellipsis whitespace-nowrap ${tone.chip}`}
                     >
-                      {c.note}
+                      {shortNote(c.note)}
                     </span>
                   </span>
+
                   <span className="mt-2 flex h-5 items-center">
                     {showDelta ? (
                       <Delta value={value} />
